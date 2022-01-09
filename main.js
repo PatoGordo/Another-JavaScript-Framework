@@ -1,5 +1,5 @@
 class Framework {
-  frameworkSigle = 'fm'
+  frameworkPrefix = 'fw'
   components = {}
   availableEvents = ['click', 'input', 'change']
   
@@ -18,7 +18,7 @@ class Framework {
     const formatTemplate = new Promise((resolve, reject) => {
       Object.keys(store.state).forEach((key) => {
         if(template.includes(`{${key}}`)) {
-          const tagSelector = `${this.frameworkSigle}-state-${key}`
+          const tagSelector = `${this.frameworkPrefix}-state-${key}`
           
           template = template
             .replaceAll(`{${key}}`, 
@@ -33,7 +33,7 @@ class Framework {
         Object.keys(component).forEach((method) => {
           this.availableEvents.forEach((event) => {
             if (template.includes(`@${event}="${method}"`)) {
-              const eventSelector = `${this.frameworkSigle}-${selector}-on${event}-${method}`
+              const eventSelector = `${this.frameworkPrefix}-${selector}-on${event}-${method}`
               
               template = template.replaceAll(`@${event}="${method}"`, `${eventSelector}`)
               eventsSelectors.push({
@@ -158,16 +158,14 @@ class App {
   render() {
     return `
       <div>
-        {input}
-        <input placeholder="write here" @change="input" />
+        <h1>Hello {input}!</h2>
+        <input placeholder="Your name" @input="input" />
         <br />
-        {count}
-        <button @click="increment">add 1</button>
+        <h2>You clicked {count} times!</h2>
+        <button @click="increment">Click here!</button>
       </div>
     `
   }
 }
-
 const app = new App()
-
 fm.render(app, document.querySelector("#app"))
