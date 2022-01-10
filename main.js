@@ -1,129 +1,9 @@
-class Framework {
-  frameworkPrefix = 'fw'
-  components = {}
-  availableEvents = ['click', 'input', 'change']
-  
-  render(component, el) {
-    this.renderComponent(component, el)
-  }
-  
-  renderComponent(component, el) {
-    const { selector, onInit, render, store } = component
-    
-    let reactiveTagsSelectors = []
-    let eventsSelectors = []
-    
-    let template = String(render())
-    
-    const formatTemplate = new Promise((resolve, reject) => {
-      Object.keys(store.state).forEach((key) => {
-        if(template.includes(`{${key}}`)) {
-          const tagSelector = `${this.frameworkPrefix}-state-${key}`
-          
-          template = template
-            .replaceAll(`{${key}}`, 
-            `<${tagSelector}>
-              ${store.state[key]}
-            </${tagSelector}>`)
-          reactiveTagsSelectors.push({
-            selector: tagSelector,
-            state: key
-          })
-        }
-        Object.keys(component).forEach((method) => {
-          this.availableEvents.forEach((event) => {
-            if (template.includes(`@${event}="${method}"`)) {
-              const eventSelector = `${this.frameworkPrefix}-${selector}-on${event}-${method}`
-              
-              template = template.replaceAll(`@${event}="${method}"`, `${eventSelector}`)
-              eventsSelectors.push({
-                selector: eventSelector,
-                event,
-                action: component[method]
-              })
-            }
-          })
-        })
-      })
-      resolve()
-    })
-      
-    formatTemplate.then(() => {
-      const mountComponent = new Promise((resolve, reject) => {
-        el.innerHTML += template
-        
-        reactiveTagsSelectors.forEach((tag) => {
-          store.subscribe(tag.state, (value) => {
-            document.querySelectorAll(tag.selector).forEach((element) => {
-              element.textContent = value
-            })
-          })
-        })
-        
-        eventsSelectors.forEach((event) => {
-          document
-            .querySelectorAll(`[${event.selector}]`).forEach((element) => {
-              element.addEventListener(event.event, () => event.action(event.selector))
-          })
-        })
-        
-        resolve()
-      })
-      
-      mountComponent.then(() => {
-        onInit()
-      })
-    })
-  }
-}
-
-class Store {
-  state = {}
-  mutation = {}
-  subscribers = []
-
-  constructor({ state, mutation }) {
-    this.state = state
-    this.mutation = mutation
-  }
-
-  commit(mutation) {
-    this.mutation[mutation](this.state)
-  }
-
-  subscribe(target, action) {
-    this.subscribers.push({
-      target,
-      action
-    })
-  }
-
-  setState(target, value) {
-    const oldValue = this.state[target]
-
-    this.state[target] = value
-
-    this.stateChanged(target, value, oldValue)
-  }
-
-  stateChanged(target, value, oldValue) {
-    this.subscribers.forEach((subscriber) => {
-      if (subscriber.target === target) {
-        subscriber.action(value, oldValue)
-      }
-    })
-  }
-}
-
-window['fm'] = new Framework()
-  
-class App {
-  selector = 'app'
+export class Counter {
+  selector = "counter"
   
   store = new Store({
     state: {
-      count: 0,
-      input: ''
+      count: 0
     },
     mutation: {
       increment: (state) => {
@@ -136,36 +16,72 @@ class App {
     this.store.commit('increment')
   }
   
-  input = (selector) => {
-    const inputValue = document
-      .querySelector(`[${selector}]`).value
-    
-    this.store.setState('input', inputValue)
+  constructor(props) {
+    this.props = props;
   }
   
-  onInit = () => {
-    console.log("App mounted!")
-    
-    this.store.subscribe('input', (value) => {
-      console.log('input changed to:', value)
+  render = () => {
+    return`
+      <h2>{props.text}</h2>
+      <button @click="increment">Click here!</button>
+    `
+  }
+  
+  style() {
+    return {
+      content: `
+        h2 {
+          color: orange;
+        }
+      `
+    }
+  }
+}
+
+class App {
+  selector = 'app'
+  
+  components = {
+    counter: new Counter({
+      text: 'You clicked {count} times!'
     })
-    
-    this.store.subscribe('count', (value, oldValue) => {
-      console.log('count changed from', oldValue, 'to', value)
-    })
+  }
+  
+  store = new Store({
+    state: {
+      input: ''
+    },
+  })
+  
+  input = (selector) => {
+    const inputValue = document.querySelector(`[${selector}]`).value
+    this.store.setState('input', inputValue)
   }
   
   render() {
     return `
+      <router-view/>
       <div>
         <h1>Hello {input}!</h2>
         <input placeholder="Your name" @input="input" />
         <br />
-        <h2>You clicked {count} times!</h2>
-        <button @click="increment">Click here!</button>
+        <counter/>
       </div>
     `
   }
+  
+  style() {
+    return {
+      lang: 'scss',
+      content: `
+        h1 {
+          color: tomato
+        }
+      `
+    }
+  }
 }
-const app = new App()
-fm.render(app, document.querySelector("#app"))
+
+const fm = new Framework()
+
+fm.render(new App(), document.querySelector("#app"))
