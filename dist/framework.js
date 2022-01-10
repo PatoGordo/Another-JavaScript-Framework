@@ -5,7 +5,7 @@ class Framework {
   directives = {
     bind: {
       event: 'input',
-      propSelector: `${this.frameworkPrefix}`,
+      propSelector: `${this.frameworkPrefix}-input-bind`,
       action(state, { store, selector }) {
         store.setState(state, document.querySelector(`[${selector}`).value)
       }
