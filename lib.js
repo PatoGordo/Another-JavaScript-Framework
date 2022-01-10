@@ -174,7 +174,7 @@ class Framework {
       mountComponent.then(() => {
         if (style) {
           let mountStyles = new Promise((resolve, reject) => {
-            styles.lang = styles.lang? styles.lang : ''
+            styles.lang = styles.lang? styles.lang : 'css'
             
             if (styles.variables) {
               Object.keys(styles.variables).forEach((variable) => {
