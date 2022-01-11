@@ -7,7 +7,14 @@ class Framework {
       event: "input",
       propSelector: `${this.frameworkPrefix}-input-bind`,
       action(state, { store, selector }) {
-        store.setState(state, document.querySelector(`[${selector}`).value);
+        document.querySelectorAll(`[${selector}`).forEach((elm) => {
+          store.subscribe(state, (value) => {
+            elm.value = value;
+          });
+          elm.addEventListener("input", (e) => {
+            store.setState(state, e.target.value);
+          });
+        });
       },
     },
   };
