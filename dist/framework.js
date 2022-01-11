@@ -1,386 +1,458 @@
 class Framework {
-  frameworkPrefix = 'fw'
-  components = {}
-  availableEvents = ['click', 'input', 'change']
+  frameworkPrefix = "fw";
+  components = {};
+  availableEvents = ["click", "input", "change"];
   directives = {
     bind: {
-      event: 'input',
+      event: "input",
       propSelector: `${this.frameworkPrefix}-input-bind`,
       action(state, { store, selector }) {
-        store.setState(state, document.querySelector(`[${selector}`).value)
-      }
-    }
-  }
-  extensions = {}
-  
+        store.setState(state, document.querySelector(`[${selector}`).value);
+      },
+    },
+  };
+  extensions = {};
+
   use(extension) {
-    const { selector, components, store, onInit } = extension
-    
+    const { selector, components, store, onInit } = extension;
+
     this.extensions[selector] = extension;
-    
+
     Object.keys(extension.directives).forEach((directive) => {
-      this.directives[directive] = extension.directives[directive]
-    })
-    
+      this.directives[directive] = extension.directives[directive];
+    });
+
     Object.keys(components).forEach((component) => {
-      this.components[component] = components[component]
-    })
+      this.components[component] = components[component];
+    });
   }
-  
+
   render(component, el, afterRender) {
-    this.renderComponent(component, el, afterRender)
+    this.renderComponent(component, el, afterRender);
   }
-  
+
   renderComponent(component, el, afterRender) {
-    const { selector, onInit, render, style, store, components, props } = component
-    
-    let reactiveTagsSelectors = []
-    let eventsSelectors = []
-    let nestedComponentsSelectors = []
-    let directivesSelectors = []
-    let submitsSelectors = []
-    
-    let template = render? String(render()) : null
-    let styles = style? style() : null
-    
+    const { selector, onInit, render, style, store, components, props } =
+      component;
+
+    let reactiveTagsSelectors = [];
+    let eventsSelectors = [];
+    let nestedComponentsSelectors = [];
+    let directivesSelectors = [];
+    let submitsSelectors = [];
+
+    let template = render ? String(render()) : null;
+    let styles = style ? style() : null;
+
     const formatTemplate = new Promise((resolve, reject) => {
       if (!template) {
-        return
+        return;
       }
       if (this.directives) {
         Object.keys(this.directives).forEach((directive) => {
-          const directiveSelector = `${this.frameworkPrefix}-${selector}-${directive}`
-          
-          if(template.includes(`#${directive}`)) {
-            template = template.replaceAll(`#${directive}`, `${directiveSelector} ${this.directives[directive].propSelector}`)
+          const directiveSelector = `${this.frameworkPrefix}-${selector}-${directive}`;
+
+          if (template.includes(`#${directive}`)) {
+            template = template.replaceAll(
+              `#${directive}`,
+              `${directiveSelector} ${this.directives[directive].propSelector}`
+            );
             directivesSelectors.push({
               selector: directiveSelector,
               event: this.directives[directive].event,
               propSelector: this.directives[directive].propSelector,
-              action: this.directives[directive].action
-            })
+              action: this.directives[directive].action,
+            });
           }
-        })
+        });
       }
       if (props) {
         Object.keys(props).forEach((prop) => {
           if (template.includes(`{props.${prop}}`)) {
-            template = template.replaceAll(`{props.${prop}}`, `${props[prop]}`)
+            template = template.replaceAll(`{props.${prop}}`, `${props[prop]}`);
           }
-        })
+        });
       }
       if (store) {
         Object.keys(store.state).forEach((key) => {
-          if(template.includes(`{${key}}`)) {
-            const tagSelector = `${this.frameworkPrefix}-state-${key}`
-            
-            template = template
-              .replaceAll(`{${key}}`, 
+          if (template.includes(`{${key}}`)) {
+            const tagSelector = `${this.frameworkPrefix}-state-${key}`;
+
+            template = template.replaceAll(
+              `{${key}}`,
               `<${tagSelector}>
                 ${store.state[key]}
-              </${tagSelector}>`)
-              
+              </${tagSelector}>`
+            );
+
             if (store.subscribe) {
               reactiveTagsSelectors.push({
                 selector: tagSelector,
-                state: key
-              })
+                state: key,
+              });
             }
           }
-        })
+        });
       }
-      if(template.includes('@')) {
+      if (template.includes("@")) {
         Object.keys(component).forEach((method) => {
           if (template.includes(`@submit="${method}"`)) {
-            const eventSelector = `${this.frameworkPrefix}-${selector}-onsubmit-${method}`
-            
-            template = template.replaceAll(`@submit="${method}"`, `${eventSelector}`)
+            const eventSelector = `${this.frameworkPrefix}-${selector}-onsubmit-${method}`;
+
+            template = template.replaceAll(
+              `@submit="${method}"`,
+              `${eventSelector}`
+            );
             submitsSelectors.push({
               selector: eventSelector,
-              event: 'submit',
-              action: (e, s) => component[method](e, s)
-            })
+              event: "submit",
+              action: (e, s) => component[method](e, s),
+            });
           }
           this.availableEvents.forEach((event) => {
             if (template.includes(`@${event}="${method}"`)) {
-              const eventSelector = `${this.frameworkPrefix}-${selector}-on${event}-${method}`
-              
-              template = template.replaceAll(`@${event}="${method}"`, `${eventSelector}`)
+              const eventSelector = `${this.frameworkPrefix}-${selector}-on${event}-${method}`;
+
+              template = template.replaceAll(
+                `@${event}="${method}"`,
+                `${eventSelector}`
+              );
               eventsSelectors.push({
                 selector: eventSelector,
                 event,
-                action: component[method]
-              })
+                action: component[method],
+              });
             }
-          })
-        })
+          });
+        });
       }
       if (this.components) {
         Object.keys(this.components).forEach((component) => {
           if (template.includes(`<${component}/>`)) {
-            const templateLoadSelector = `${this.frameworkPrefix}-${selector}-load-global-component-${component}`
-            
-            template = template.replaceAll(`<${component}/>`, `<${templateLoadSelector}></${templateLoadSelector}>`)
+            const templateLoadSelector = `${this.frameworkPrefix}-${selector}-load-global-component-${component}`;
+
+            template = template.replaceAll(
+              `<${component}/>`,
+              `<${templateLoadSelector}></${templateLoadSelector}>`
+            );
             nestedComponentsSelectors.push({
               selector: templateLoadSelector,
-              component: this.components[component]
-            })
+              component: this.components[component],
+            });
           }
-        })
+        });
       }
       if (components) {
         Object.keys(components).forEach((nestedComponent) => {
           if (template.includes(`<${nestedComponent}/>`)) {
-            const templateLoadSelector = `${this.frameworkPrefix}-${selector}-load-${nestedComponent}`
-            
-            template = template.replaceAll(`<${nestedComponent}/>`, `<${templateLoadSelector}></${templateLoadSelector}>`)
+            const templateLoadSelector = `${this.frameworkPrefix}-${selector}-load-${nestedComponent}`;
+
+            template = template.replaceAll(
+              `<${nestedComponent}/>`,
+              `<${templateLoadSelector}></${templateLoadSelector}>`
+            );
             nestedComponentsSelectors.push({
               selector: templateLoadSelector,
-              component: components[nestedComponent]
-            })
+              component: components[nestedComponent],
+            });
           }
-        })
+        });
       }
-      resolve()
-    })
-      
+      resolve();
+    });
+
     formatTemplate.then(() => {
       const mountComponent = new Promise((resolve, reject) => {
         if (el?.length) {
           el.forEach((elm) => {
-            elm.innerHTML += template
-          })
+            elm.innerHTML += template;
+          });
         } else {
-          el.innerHTML = template
+          el.innerHTML = template;
         }
-        
-        if(reactiveTagsSelectors.length) {
+
+        if (reactiveTagsSelectors.length) {
           reactiveTagsSelectors.forEach((tag) => {
             store.subscribe(tag.state, (value) => {
               document.querySelectorAll(tag.selector).forEach((element) => {
-                element.textContent = value
-              })
-            })
-          })
+                element.textContent = value;
+              });
+            });
+          });
         }
-        
-        if(eventsSelectors.length) {
+
+        if (eventsSelectors.length) {
           eventsSelectors.forEach((event) => {
             document
-              .querySelectorAll(`[${event.selector}]`).forEach((element) => {
-                element.addEventListener(event.event, () => event.action(event.selector))
-            })
-          })
+              .querySelectorAll(`[${event.selector}]`)
+              .forEach((element) => {
+                element.addEventListener(event.event, () =>
+                  event.action(event.selector)
+                );
+              });
+          });
         }
-        
+
         if (submitsSelectors.length) {
           submitsSelectors.forEach((event) => {
             document
-              .querySelectorAll(`[${event.selector}]`).forEach((element) => {
-                element.addEventListener(event.event, (e) => event.action(e, event.selector))
-              })
-          })
+              .querySelectorAll(`[${event.selector}]`)
+              .forEach((element) => {
+                element.addEventListener(event.event, (e) =>
+                  event.action(e, event.selector)
+                );
+              });
+          });
         }
-        
-        if(nestedComponentsSelectors) {
+
+        if (nestedComponentsSelectors) {
           nestedComponentsSelectors.forEach((nestedComponent) => {
-            this.render(nestedComponent.component, document.querySelectorAll(nestedComponent.selector))
-          })
+            this.render(
+              nestedComponent.component,
+              document.querySelectorAll(nestedComponent.selector)
+            );
+          });
         }
-        
-        if(directivesSelectors) {
+
+        if (directivesSelectors) {
           directivesSelectors.forEach((directiveSelector) => {
-            document.querySelectorAll(`[${directiveSelector.selector}]`)
+            document
+              .querySelectorAll(`[${directiveSelector.selector}]`)
               .forEach((element) => {
                 element.addEventListener(directiveSelector.event, () => {
-                  directiveSelector.action(element.getAttribute(directiveSelector.propSelector), { store, selector: directiveSelector.selector })
-                })
-              })
-          })
+                  directiveSelector.action(
+                    element.getAttribute(directiveSelector.propSelector),
+                    { store, selector: directiveSelector.selector }
+                  );
+                });
+              });
+          });
         }
-        
-        resolve()
-      })
-      
+
+        resolve();
+      });
+
       mountComponent.then(() => {
         if (style) {
           let mountStyles = new Promise((resolve, reject) => {
-            styles.lang = styles.lang? styles.lang : 'css'
-            
+            styles.lang = styles.lang ? styles.lang : "css";
+
             if (styles.variables) {
               Object.keys(styles.variables).forEach((variable) => {
-                styles.content = styles.content.replaceAll(`{${variable}}`, `${styles.variables[variable]}`)
-              })
+                styles.content = styles.content.replaceAll(
+                  `{${variable}}`,
+                  `${styles.variables[variable]}`
+                );
+              });
             }
-            
-            let cachedStyleStorageName = `${this.frameworkPrefix}-${selector}-cached-style`
-            
+
+            let cachedStyleStorageName = `${this.frameworkPrefix}-${selector}-cached-style`;
+
             const css = (cssContent, clearBefore = false) => {
-              let frameworkCssTag = document.querySelector(`#${this.frameworkPrefix}-${selector}-styles`)
-              
+              let frameworkCssTag = document.querySelector(
+                `#${this.frameworkPrefix}-${selector}-styles`
+              );
+
               if (frameworkCssTag) {
-                if(clearBefore) {
-                  frameworkCssTag.textContent = ''
+                if (clearBefore) {
+                  frameworkCssTag.textContent = "";
                 }
-                frameworkCssTag.textContent += cssContent
+                frameworkCssTag.textContent += cssContent;
               } else {
-                frameworkCssTag = document.createElement('style')
-                frameworkCssTag.id = `${this.frameworkPrefix}-${selector}-styles`
-                frameworkCssTag.textContent += cssContent
-                document.head.appendChild(frameworkCssTag)
+                frameworkCssTag = document.createElement("style");
+                frameworkCssTag.id = `${this.frameworkPrefix}-${selector}-styles`;
+                frameworkCssTag.textContent += cssContent;
+                document.head.appendChild(frameworkCssTag);
               }
-            }
-            
+            };
+
             if (localStorage.getItem(cachedStyleStorageName)) {
-              css(localStorage.getItem(cachedStyleStorageName))
+              css(localStorage.getItem(cachedStyleStorageName));
             }
-            
-            if (styles.lang === 'scss' || styles.lang === 'sass') {
-              if(typeof Sass === undefined) {
-                console.warn('To use sass or scss you need to add the sass.js cdn to your html head (<script src="https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.11.1/sass.sync.min.js"></script>)')
-                return resolve()
+
+            if (styles.lang === "scss" || styles.lang === "sass") {
+              if (typeof Sass === undefined) {
+                console.warn(
+                  'To use sass or scss you need to add the sass.js cdn to your html head (<script src="https://cdnjs.cloudflare.com/ajax/libs/sass.js/0.11.1/sass.sync.min.js"></script>)'
+                );
+                return resolve();
               }
             }
-            
-            if (styles.lang === 'scss') {
-              Sass.compile(styles.content.trim(), { indentedSyntax: false }, (compiledCss) => {
-                if (localStorage.getItem(cachedStyleStorageName) !== compiledCss.text) {
-                  css(compiledCss.text)
-                  localStorage.setItem(cachedStyleStorageName, compiledCss.text)
-                  resolve()
-                } else {
-                  resolve()
+
+            if (styles.lang === "scss") {
+              Sass.compile(
+                styles.content.trim(),
+                { indentedSyntax: false },
+                (compiledCss) => {
+                  if (
+                    localStorage.getItem(cachedStyleStorageName) !==
+                    compiledCss.text
+                  ) {
+                    css(compiledCss.text);
+                    localStorage.setItem(
+                      cachedStyleStorageName,
+                      compiledCss.text
+                    );
+                    resolve();
+                  } else {
+                    resolve();
+                  }
                 }
-              });
-            } else if (styles.lang === 'sass') {
-              Sass.compile(styles.content.trim(), { indentedSyntax: true }, (compiledCss) => {
-                if (localStorage.getItem(cachedStyleStorageName) !== compiledCss.text) {
-                  css(compiledCss.text)
-                  localStorage.setItem(cachedStyleStorageName, compiledCss.text)
-                  resolve()
-                } else {
-                  resolve()
+              );
+            } else if (styles.lang === "sass") {
+              Sass.compile(
+                styles.content.trim(),
+                { indentedSyntax: true },
+                (compiledCss) => {
+                  if (
+                    localStorage.getItem(cachedStyleStorageName) !==
+                    compiledCss.text
+                  ) {
+                    css(compiledCss.text);
+                    localStorage.setItem(
+                      cachedStyleStorageName,
+                      compiledCss.text
+                    );
+                    resolve();
+                  } else {
+                    resolve();
+                  }
                 }
-              });
-            } else if (styles.lang === 'css') {
+              );
+            } else if (styles.lang === "css") {
               if (localStorage.getItem(cachedStyleStorageName) !== styles.t) {
-                css(styles.content)
-                localStorage.setItem(cachedStyleStorageName, styles.content)
-                resolve()
+                css(styles.content);
+                localStorage.setItem(cachedStyleStorageName, styles.content);
+                resolve();
               } else {
-                resolve()
+                resolve();
               }
             }
-          })
-          
+          });
+
           mountStyles.then(() => {
-            onInit? onInit() : null
-            afterRender? afterRender() : null
-          })
+            onInit ? onInit() : null;
+            afterRender ? afterRender() : null;
+          });
         } else {
-          onInit? onInit() : null
-          afterRender? afterRender() : null
+          onInit ? onInit() : null;
+          afterRender ? afterRender() : null;
         }
-      })
-    })
+      });
+    });
   }
 }
 
 class Store {
-  state = {}
-  mutation = {}
-  subscribers = []
+  state = {};
+  mutation = {};
+  subscribers = [];
 
   constructor({ state, mutation }) {
-    this.state = state
-    this.mutation = mutation
+    this.state = state;
+    this.mutation = mutation;
   }
 
   commit(mutation) {
-    this.mutation[mutation](this.state)
+    this.mutation[mutation](this.state);
   }
 
   subscribe(target, action) {
     this.subscribers.push({
       target,
-      action
-    })
+      action,
+    });
   }
 
   setState(target, value) {
-    const oldValue = this.state[target]
+    const oldValue = this.state[target];
 
-    this.state[target] = value
+    this.state[target] = value;
 
-    this.stateChanged(target, value, oldValue)
+    this.stateChanged(target, value, oldValue);
   }
 
   stateChanged(target, value, oldValue) {
     this.subscribers.forEach((subscriber) => {
       if (subscriber.target === target) {
-        subscriber.action(value, oldValue)
+        subscriber.action(value, oldValue);
       }
-    })
+    });
   }
 }
 
 class Router {
-  el = ""
-  frameworkInstance = null
-  routes = {}
-  _route404 = null
-  router = null
-  
+  el = "";
+  frameworkInstance = null;
+  routes = {};
+  _route404 = null;
+  router = null;
+
   constructor({ rootElement, frameworkInstance }) {
     if (typeof Navigo === undefined) {
-      console.warn('To use router you need to add the navigo cdn to your html head (<script src="https://unpkg.com/navigo"></script>)')
+      console.warn(
+        'To use router you need to add the navigo cdn to your html head (<script src="https://unpkg.com/navigo"></script>)'
+      );
       return;
     }
-    
-    this.frameworkInstance = frameworkInstance
-    this.el = rootElement
-    this.router = new Navigo("/", { hash: true, linksSelector: "a" })
+
+    this.frameworkInstance = frameworkInstance;
+    this.el = rootElement;
+    this.router = new Navigo("/", { hash: true, linksSelector: "a" });
   }
-  
+
   route(path, component, props) {
     this.routes[path] = {
-      component, props
-    }
+      component,
+      props,
+    };
   }
-  
+
   route404(component, props) {
     this._route404 = {
       component,
-      props
-    }
+      props,
+    };
   }
-  
+
   hooks(_hooks) {
-    this.router.hooks(_hooks)
+    this.router.hooks(_hooks);
   }
-  
+
   init() {
     const mountRoutes = new Promise((resolve, reject) => {
       Object.keys(this.routes).forEach((route) => {
         this.router.on(route, (match) => {
-          this.frameworkInstance.render(new this.routes[route].component(this.routes[route].props || {}, { match, router: this.router }), this.el)
-        })
-      })
-      
+          this.frameworkInstance.render(
+            new this.routes[route].component(this.routes[route].props || {}, {
+              match,
+              router: this.router,
+            }),
+            this.el
+          );
+        });
+      });
+
       if (this._route404) {
         this.router.notFound((match) => {
-          this.frameworkInstance.render(new this._route404.component(this._route404.props || {}, { match, router: this.router }), this.el)
-        })
+          this.frameworkInstance.render(
+            new this._route404.component(this._route404.props || {}, {
+              match,
+              router: this.router,
+            }),
+            this.el
+          );
+        });
       }
-      
-      resolve()
+
+      resolve();
     }).then(() => {
-      window['navigo'] = this.router
-      this.router.resolve()
-    })
+      window["navigo"] = this.router;
+      this.router.resolve();
+    });
   }
 }
 
-window['Framework'] = Framework
-window['Store'] = Store
-window['Router'] = Router
+window["Framework"] = Framework;
+window["Store"] = Store;
+window["Router"] = Router;
