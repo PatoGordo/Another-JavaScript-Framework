@@ -55,12 +55,10 @@ fm.render(
       frameworkInstance: fm
     })
     
-    window['router'] = router
-    
     router.route('/', Home)
     router.route('/about', About)
     router.route('/hello/:name', Hello)
-    router.route404(Home, { text: '404 - Page not found' })
+    router.route404(Page404, { text: '404 - Page not found' })
     
     router.init()
   }
