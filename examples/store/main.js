@@ -16,7 +16,9 @@ const authStore = new Store({
     signIn() {
       signInWithUsernameAndPassword(authStore.state.username, authStore.state.password)
         .then((token) => {
-          authStore.setState('token', token)
+          authStore.setState({
+            token
+          })
         })
         .catch((err) => {
           alert(err.message)
@@ -35,6 +37,8 @@ authStore.subscribe('token', (value) => {
     })
     .catch(() => {
       alert("Invalid token!")
-      authStore.setState('token', '')
+      authStore.setState({
+        token: ''
+      })
     })
 })

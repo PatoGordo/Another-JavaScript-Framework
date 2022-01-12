@@ -7,42 +7,18 @@ import { Navbar } from "./components/navbar.js"
 
 const fm = new Framework()
 
-class App {
+class App extends Component {
   selector = "app"
   
-  components = {
-    navbar: new Navbar({ title: 'App' })
-  }
+  components = [
+    new Navbar({ title: 'App' })
+  ]
   
   render() {
     return`
-      <navbar/>
+      <app-navbar/>
       <main id="router-view"></main>
     `
-  }
-  
-  style() {
-    return {
-      lang: 'scss',
-      content: `
-        #app {
-          display: flex;
-          flex-direction: column;
-          align-items: start;
-          #router-view {
-            width: 100%;
-            padding: 16px;
-            padding-top: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center
-            h2 {
-              text-align: center;
-            }
-          }
-        }
-      `
-    }
   }
 }
 

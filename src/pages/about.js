@@ -1,4 +1,4 @@
-export class About {
+export class About extends Component {
   selector = "about"
   
   render() {

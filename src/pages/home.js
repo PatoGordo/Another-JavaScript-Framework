@@ -1,22 +1,22 @@
 import { Counter } from "../components/counter.js"
 import { Form } from "../components/form.js"
 
-export class Home {
+export class Home extends Component {
   selector = "home"
   
-  components = {
-    counter: new Counter(),
-    form: new Form()
-  }
+  components = [
+    new Counter(),
+    new Form()
+  ]
   
   render() {
     return`
       <h2>Home page</h2>
       <br />
-      <counter/>
+      <home-counter/>
       <br />
       <br />
-      <form/>
+      <home-form/>
     `
   }
 }

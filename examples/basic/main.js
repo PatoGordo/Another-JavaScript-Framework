@@ -1,15 +1,17 @@
 const fw = new Framework()
 
-class App {
-  // not required but recommended
-  // selector give to the component childrens a scope
+// some components need to extend the Framework Component base class
+class App extends Component {
+  // selector is the html selector <app />
   selector = "app"
   
-  // static store (static store does not support reactivity)
-  store = {
-    state: {
-      name: 'Hello World'
-    }
+  state = {
+    name: 'Hello World'
+  }
+  
+  constructor() {
+    // if you using constructor you need to add super() to get the extended Component properties
+    super()
   }
   
   // onInit method will be called oneTime when the app component is mounted
@@ -18,31 +20,11 @@ class App {
   }
   
   // render is where you will put your component html
-  // {name} will be changed to the state "name" in the store
+  // { state.name } will be changed to the state "name"
   render() {
     return `
-      <h1>{name}</h1>
+      <h1>{ state.name }</h1>
     `
-  }
-  
-  // style is where you will put your component styles
-  style() {
-    return {
-      // lang can be css || scss || sass
-      // lang is not required and the default is css
-      lang: 'css',
-      // variables is like states but without reactivity
-      variables: {
-        color: 'blue'
-      },
-      // content is where you will put the styles code
-      // {color} will be changed to the variable color value
-      content: `
-        h1 {
-          color: {color}
-        }
-      `
-    }
   }
 }
 

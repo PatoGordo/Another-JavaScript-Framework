@@ -1,24 +1,22 @@
-export class Hello {
+export class Hello extends Component {
   selector = "hello"
   
   match = {}
-  
-  // You don't need a new Store() to set static states
-  store = {
-    state: {
-      name: ''
-    }
+ 
+  state = {
+    name: ''
   }
   
   constructor({}, { match }) {
+    super()
     this.match = match;
     
-    this.store.state.name = match.data.name
+    this.state.name = match.data.name
   }
   
   render() {
     return`
-      <h2>Hello {name} 🤗!</h2>
+      <h2>Hello { state.name } 🤗!</h2>
       <br/>
       <a href="#/">Return to home</a>
     `

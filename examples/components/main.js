@@ -1,13 +1,10 @@
 const fw = new Framework()
 
-class HelloWorld {
+class HelloWorld extends Component {
   selector = "hello-world"
  
-  // static store
-  store = {
-    state: {
-      title: "Hello World"
-    }
+  state = {
+    title: "Hello World"
   }
   
   onInit() {
@@ -16,27 +13,29 @@ class HelloWorld {
   
   render() {
     return`
-      <h1>{title}</h1>
+      <h1>{ state.title }</h1>
     `
   }
 }
 
-class App {
+class App extends Component {
   selector = "app"
   
   // just inform to the framework about the component HelloWorld into this component
-  components = {
-    "hello-world": new HelloWorld()
-  }
+  components = [
+    new HelloWorld()
+  ]
   
   onInit = () => {
-    console.log("title state from hello-world component:", this.components["hello-world"].store.state.title)
+    console.log("title state from hello-world component:", this.components[0].state.title)
   }
   
-  // the framework will replace the <hello-world/> to the HelloWorld html content
+  // to use a component you need to include fisrt the parent selector and after the child selector
+  // <parent_selector-child_selector />
+  // the framework will replace the <app-hello-world/> to the HelloWorld html content
   render() {
     return `
-      <hello-world/>
+      <app-hello-world/>
     `
   }
 }

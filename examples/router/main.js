@@ -3,7 +3,7 @@
 
 const fm = new Framework()
 
-class App {
+class App extends Component {
   selector = "app"
   
   render() {
@@ -13,7 +13,7 @@ class App {
   }
 }
 
-class Home {
+class Home extends Component {
   selector = "home"
   
   goToAbout = () => {
@@ -30,7 +30,7 @@ class Home {
   }
 }
 
-class About {
+class About extends Component {
   selector = "about"
 
   // use the href="#/routePath" to redirect to another page without reload
@@ -43,19 +43,20 @@ class About {
   }
 }
 
-class Page404 {
+class Page404 extends Component {
   selector = "404"
   
   props = {}
   
   // you can also receive props in a pageComponent
   constructor(props) {
+    super()
     this.props = props
   }
 
   render() {
     return `
-      <h1>{props.text}</h1>
+      <h1>{ props.textb}</h1>
       <br />
       <a href="#/">Return to home</a>
     `

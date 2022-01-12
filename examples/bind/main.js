@@ -1,20 +1,17 @@
 const fw = new Framework()
 
-class App {
+class App extends Component {
   selector = "app"
   
-  // dynamic store
-  store = new Store({
-    state: {
-      name: ''
-    }
-  })
+  state = {
+    name: ''
+  }
   
-  // #bind can only be used with dynamic store
+  // #bind is used to connect the value of an input and the component state
   render() {
     return `
-      <h1>{name}</h1>
-      <input #bind="name" placeholder="Your name" />
+      <h1>{ state.name }</h1>
+      <input #bind="state.name" placeholder="Your name" />
     `
   }
 }
